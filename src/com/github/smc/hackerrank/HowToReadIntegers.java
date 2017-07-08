@@ -35,5 +35,15 @@ public class HowToReadIntegers {
 
     System.out.println(fine);
   }
+  
+  private static int[] readNIntegers(Scanner in, int n) {
+	  int[] array = new int[n];
+	  
+	  for (int i = 0; i < n; i++) {
+		  array[i] = in.nextInt();
+	  }
+	  
+	  return array;
+  }
 
 }
