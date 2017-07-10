@@ -85,4 +85,14 @@ public class Utils {
 		List<Integer> list = new ArrayList<Integer>() {{ for (int i : parent) add(i); }};
 		return Collections.indexOfSubList(list, sublist) != -1;
 	}
+	
+	private static List<Integer> toList(int[] array) {
+		List<Integer> list = new ArrayList<>();
+		
+		for (int i : array) {
+			list.add(i);
+		}
+		
+		return list;
+	}
 }
