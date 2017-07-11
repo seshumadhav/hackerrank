@@ -1,4 +1,4 @@
-package com.github.smc.hackerrank.domains.algorithms.searching.maxsubarraysum;
+package com.github.smc.hackerrank.domains.algorithms.search.maxsubarraysum;
 
 import java.io.InputStream;
 import java.util.ArrayList;

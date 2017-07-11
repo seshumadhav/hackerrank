@@ -1,24 +1,27 @@
-package com.github.smc.hackerrank.domains.algorithms.searching.connectedcellsgrid;
+package com.github.smc.hackerrank.domains.algorithms.search.connectedcellsgrid;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.Stack;
 
 /**
- *
  * https://www.hackerrank.com/challenges/connected-cell-in-a-grid
  * 
  * @author seshumadhav@gmail.com
  */
-public class SolutionV1 {
+public class Solution {
 	
 	private int[][] a;
 	private int n;
 	private int m;
 	
-	private Set<Cell> largest = new HashSet<>();
+	private int largestSoFar = 0;
 
-    public SolutionV1(int[][] given, int n, int m) {
+    public Solution(int[][] given, int n, int m) {
 		this.a = given;
 		this.n = n;
 		this.m = m;
@@ -38,7 +41,7 @@ public class SolutionV1 {
         	}
         }
         
-        SolutionV1 s = new SolutionV1(a, n, m);
+        Solution s = new Solution(a, n, m);
         s.run();
     }
 	
@@ -55,52 +58,45 @@ public class SolutionV1 {
 	public void run() {
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < m; j++) {
-				Set<Cell> largestIKnow = getArea(i, j, new HashSet<>());
-				
-				if (largestIKnow.size() > largest.size()) {
-					largest.clear();
-					largest.addAll(largestIKnow);
+				int largestISawNow = getArea(i, j);
+				if (largestISawNow > largestSoFar) {
+					largestSoFar = largestISawNow;
 				}
 			}
 		}
 		
-		System.out.println(largest.size());
+		System.out.println(largestSoFar);
 	}
 	
-	private Set<Cell> getArea(int i, int j, Set<Cell> path) {
-		System.out.println("Calling getArea(" + i + ", " + j + ", Path: " + toString(path) + ")");
-		if (!canThisCellBeProcessed(i, j, path)) {
-			System.out.println("getArea(" + i + ", " + j + "): 0" + "\n");
-			return new HashSet<>(); // TBD
-		}		
-		
-		Cell thisCell = Cell.of(i, j);
-		path.add(thisCell);
-		
-		Set<Cell> myArea = new HashSet<>();
-		myArea.add(thisCell);
-		
-		Cell[] adjs = getAdjacentCells(i, j);
-		for (Cell adj : adjs) {
-			if (canThisCellBeProcessed(adj.i, adj.j, path)) {
-				Set<Cell> newPath = new HashSet<>();
-				newPath.addAll(path);
-				myArea.addAll(getArea(adj.i, adj.j, newPath));
+	private int getArea(int i, int j) {
+		if (!isValid(i, j) || !isFilled(i, j)) {
+			return 0;
+		}
+
+		List<Cell> addedCells = new ArrayList<>();
+		Stack<Cell> stack = new Stack<>();
+		Cell cell = Cell.of(i, j);
+
+		stack.add(cell);
+		addedCells.add(cell);
+
+		int depth = 0;
+		while (!stack.empty()) {
+			Cell thisCell = stack.pop();
+			depth++;
+
+			Cell[] adjCells = getAdjacentCells(thisCell.i, thisCell.j);
+			for (Cell c : adjCells) {
+				if (isValid(c.i, c.j) && isFilled(c.i, c.j) && !addedCells.contains(c)) {
+					stack.push(c);
+					addedCells.add(c);
+				}
 			}
 		}
-		
-		System.out.println("getArea(" + i + ", " + j + "): " + myArea.size() + "\nContents of area: " + toString(myArea) + "\n");
-		return myArea;
+
+		return depth;
 	}
-	
-	private boolean canThisCellBeProcessed(int i, int j, Set<Cell> path) {
-		boolean isValid = isValid(i, j); 
-		boolean isFilled = isFilled(i, j);
-		boolean isInPath = path.contains(Cell.of(i, j));
-		
-		return isValid && isFilled && !isInPath;
-	}
-	
+
 	private static Cell[] getAdjacentCells(int i, int j) {
 		Cell[] cells = new Cell[8];
 		
@@ -135,4 +131,38 @@ public class SolutionV1 {
     private  boolean isFilled(int i, int j) {
     	return isValid(i, j) && a[i][j] == 1; 
     }
+}
+
+class Cell {
+	int i;
+	int j;
+	
+	public Cell(int i, int j) {
+		this.i = i;
+		this.j = j;
+	}
+	
+	public static Cell of(int i, int j) {
+		return new Cell(i, j);
+	}
+
+	@Override
+	public boolean equals(Object b) {
+		Cell that = (Cell) b;
+
+		return that.i == this.i && that.j == this.j;
+	}
+	
+	public static Cell none() {
+		return new Cell(-2, -2);
+	}
+	
+	public String toString() {
+		return "(" + i + ", " + j + ")";
+	}
+	
+	@Override
+	public int hashCode() {
+		return i + j;
+	}
 }

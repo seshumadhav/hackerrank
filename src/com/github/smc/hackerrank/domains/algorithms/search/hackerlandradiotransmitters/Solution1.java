@@ -1,4 +1,4 @@
-package com.github.smc.hackerrank.domains.algorithms.searching.hackerlandradiotransmitters;
+package com.github.smc.hackerrank.domains.algorithms.search.hackerlandradiotransmitters;
 
 import java.io.*;
 import java.util.*;
