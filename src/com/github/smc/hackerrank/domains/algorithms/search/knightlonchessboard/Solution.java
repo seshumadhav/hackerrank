@@ -2,13 +2,12 @@ package com.github.smc.hackerrank.domains.algorithms.search.knightlonchessboard;
 
 import java.io.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.text.*;
 import java.math.*;
 import java.util.regex.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.github.smc.hackerrank.domains.algorithms.search.knightlonchessboard.Solution.N;
 
 public class Solution {
 
@@ -22,38 +21,55 @@ public class Solution {
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
 		N = in.nextInt();
+		in.close();
+
 		dest = Pos.of(N - 1, N - 1);
 
-		List<Pair> pairs = pairs();
-		System.out.println(print(pairs));
-
+		Pos src = Pos.of(0, 0);
 		for (int i = 1; i < N; i++) {
-			distances = new HashMap<>();
-			minDistance = Integer.MAX_VALUE;
-			path = new LinkedList<>();
-
 			List<Pair> jumpRanges = pairsPerRow(i);
-			System.out.println(print(jumpRanges));
-
-			Pos src = Pos.of(0, 0);
-
+			// System.out.println("Jump Ranges: " + print(jumpRanges));
 			List<Integer> answers = new ArrayList<>();
+
 			for (Pair jumpRange : jumpRanges) {
+				distances = new HashMap<>();
+				minDistance = Integer.MAX_VALUE;
 				LinkedList<Pos> journey = new LinkedList<>();
-				answers.add(getNumHops(journey, src, jumpRange));
+
+				String pad = "\t";
+
+				// System.out.println("getNumHops(Journey: " + print(journey) + ", jumpRange: " + jumpRange + ")");
+				Integer numHops = getNumHops(pad, journey, src, jumpRange);
+				answers.add(numHops == Integer.MAX_VALUE ? -1 : numHops);
+				pruneMap();
+				// System.out.println("Map computed so far: \n" + distances);
 			}
+
+			// System.out.println("\n\nNum Hops: " + print(answers));
 			System.out.println(print(answers));
 		}
 	}
 
-	private static Integer getNumHops(LinkedList<Pos> journey, Pos src, Pair jumpRange) {
+	private static void pruneMap() {
+		Set<Entry<String, Integer>> prunedSet = distances.entrySet().stream()
+				.filter(entry -> entry.getValue() != Integer.MAX_VALUE).collect(Collectors.toSet());
+		distances = new HashMap<>();
+		for (Entry<String, Integer> e : prunedSet) {
+			distances.put(e.getKey(), e.getValue());
+		}
+	}
+
+	private static Integer getNumHops(String pad, LinkedList<Pos> journey, Pos src, Pair jumpRange) {
+		// System.out.println("\n" + pad + "Attempting to execute getNumHops between " + src + " & " + dest + "[JumpRange: " + jumpRange + "]");
 		if (src.equals(dest)) {
+			// System.out.println(pad + "src and destination are same. Updating map with " + key(src, dest) + " as 0.");
 			updateMap(src, dest, 0);
 			return 0;
 		}
 
 		Integer distance = preComputedMap(src, dest);
-		if (distance != -1) {
+		if (distance != Integer.MAX_VALUE) {
+			// System.out.println(pad + "Precomputed distance b/w " + src + ", " + dest + " found: " + distance);
 			return distance;
 		}
 
@@ -65,29 +81,39 @@ public class Solution {
 		hops = removeDupes(hops);
 
 		if (hops.isEmpty()) {
-			return -1;
+			// System.out.println(pad + "No new positions to jump. Returning INTEGER.MAX_VALUE");
+			return Integer.MAX_VALUE; // no route
 		}
 
-		minDistance = Integer.MAX_VALUE;
+		Integer minDistance = Integer.MAX_VALUE;
+		Pos via = null;
 		journey.add(src);
+		// System.out.println(pad + "I will find shortest paths via each of " + print(hops));
 		for (Pos nextPos : hops) {
 			int distanceFromNextPos = preComputedMap(nextPos, dest);
-			if (distanceFromNextPos == -1) {
-				distanceFromNextPos = getNumHops(journey, nextPos, jumpRange) + 1;
+			if (distanceFromNextPos == Integer.MAX_VALUE) {
+				Integer numHopsFromNextPos = getNumHops(pad + "\t", journey, nextPos, jumpRange);
+				distanceFromNextPos = numHopsFromNextPos == Integer.MAX_VALUE ? Integer.MAX_VALUE : numHopsFromNextPos;
 			}
 
+			// System.out.println(pad + "Distance from " + src + " via " + nextPos + " to " + dest + ": " + distanceFromNextPos);
 			if (distanceFromNextPos < minDistance) {
-				minDistance = distanceFromNextPos;
+				// System.out.println(pad + "Noted minDistance (" + src + " > " + nextPos + " > " + dest + ": " + distanceFromNextPos);
+				via = nextPos;
+				minDistance = distanceFromNextPos + 1;
+			} else {
+				// System.out.println(pad + "minDistance(" + src + " > " + nextPos + " > " + dest + ": " + distanceFromNextPos + ". Not smaller than best seen so far." + minDistance + "(Via " + via + "). Ignoring");
 			}
 		}
 
-		updateMap(src, dest, minDistance);
+		// System.out.println(pad + "Updated in map that shortest distance between " + src + " & " + dest + " was: " + minDistance + " | Via: " + via + "\n---\n");
+		updateMap(src, dest, minDistance == Integer.MAX_VALUE ? Integer.MAX_VALUE : minDistance);
 		return minDistance;
 	}
 
 	private static Integer preComputedMap(Pos src, Pos dest) {
 		String key = key(src, dest);
-		return distances.containsKey(key) ? distances.get(key) : -1;
+		return distances.containsKey(key) ? distances.get(key) : Integer.MAX_VALUE;
 	}
 
 	public static void updateMap(Pos src, Pos dest, int hops) {
@@ -95,7 +121,7 @@ public class Solution {
 	}
 
 	private static String key(Pos src, Pos dest) {
-		return src.toString() + "-" + dest.toString();
+		return src.toString() + "-TO-" + dest.toString();
 	}
 
 	private static List<Pair> pairs() {
@@ -145,16 +171,16 @@ public class Solution {
 	private static final <T> String print(List<T> list) {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("[");
+		// sb.append("[");
 		boolean firstItemPassed = false;
 		for (T t : list) {
 			if (firstItemPassed) {
-				sb.append(", ");
+				sb.append(" ");
 			}
 			sb.append(t.toString());
 			firstItemPassed = true;
 		}
-		sb.append("]");
+		// sb.append("]");
 
 		return sb.toString();
 	}
@@ -191,7 +217,7 @@ class Pair {
 		Pair otherPair = (Pair) other;
 		return a == otherPair.a && b == otherPair.b;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		int result = 17;
@@ -206,11 +232,11 @@ class Pos {
 	int y;
 
 	public boolean isValid() {
-		return x >= 0 && y >= 0 && x < N && y < N;
+		return x >= 0 && y >= 0 && x < Solution.N && y < Solution.N;
 	}
 
 	public boolean outsideTheBoard() {
-		return x >= N || y >= N;
+		return x >= Solution.N || y >= Solution.N;
 	}
 
 	public Pos(int x, int y) {

@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class Utils {
 
-	private static final <T> String print(List<T> list) {
+	private static final <T> String printList(List<T> list) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("[");
@@ -116,8 +116,21 @@ public class Utils {
 		}
 		return new ArrayList<T>(set);
 	}
+	
+	private static int[] getArrayWithout(int[] array, int x) {
+		int[] result = new int[array.length - 1];
+		
+		int index = 0;
+		for (int item : array) {
+			if (item != x) {
+				result[index++] = item;
+			}
+		}
+		
+		return result;
+	}
 
-	private int hashCodeImpl() {
+	private static int hashCodeImpl() {
 		// @Override
 		// public int hashCode() {
 		// int result = 17;
@@ -127,5 +140,15 @@ public class Utils {
 		// return result;
 		// }
 		return -1;
+	}
+
+	private static int hashCodeOf(int[] array) {
+		int result = 17;
+		
+		for (int item : array) {
+			result = 31*result + item;
+		}
+		
+		return result; 
 	}
 }
